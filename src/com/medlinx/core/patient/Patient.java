@@ -4,7 +4,9 @@ import java.util.Calendar;
 import java.util.Date;
 
 import ui.medlinx.com.frame.Main.DrawingPanel;
+import ui.medlinx.com.frame.Main.DrawingPanel2;
 import ui.medlinx.com.frame.Main.MLnxClient;
+import ui.medlinx.com.frame.Main.RealECGPanel;
 
 import com.medlinx.core.constant.SystemConstant;
 import com.medlinx.core.databuff.MultiChannelBuffer;
@@ -24,6 +26,15 @@ public class Patient implements Cloneable {
 	private PatientData patientData;
 	private PatientSort patientSort;
 	private DrawingPanel drawingPanel;
+	private DrawingPanel2 drawingPanel2;
+
+	public DrawingPanel2 getDrawingPanel2() {
+		return drawingPanel2;
+	}
+
+	public void setDrawingPanel2(DrawingPanel2 drawingPanel2) {
+		this.drawingPanel2 = drawingPanel2;
+	}
 
 	private Long groupID;
 	public boolean[] channelFlag;
@@ -70,12 +81,17 @@ public class Patient implements Cloneable {
 		if (isSelected) {
 			// 开启databuffer
 			this.patientData.start();
-			drawingPanel = new DrawingPanel(mLnxClient, this.patientData.getDataBuffer());
+			drawingPanel = new DrawingPanel(mLnxClient,
+					this.patientData.getDataBuffer());
+			drawingPanel2 = new DrawingPanel2(mLnxClient,
+					this.patientData.getDataBuffer());
 		} else {
 			// 关闭databuffer
 			this.patientData.end();
 			drawingPanel.endDraw();
 			drawingPanel = null;
+			drawingPanel2.endDraw();
+			drawingPanel2 = null;
 		}
 	}
 

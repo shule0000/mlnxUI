@@ -71,7 +71,7 @@ public class MLnxClient extends JFrame {
 	// contains all drawing
 	// panels
 	private static String connectStr;
-	private static final int ALARM_INTERVAL[] = { 0, 8000, 20000, 35000 };
+	private static final int ALARM_INTERVAL[] = {0, 8000, 20000, 35000};
 	private static int repaintFrequency, displayBufferFrequency,
 			dataBufferFrequency; // #repaint per second for drawing panel
 	// #PT per second in display buffer
@@ -704,10 +704,10 @@ public class MLnxClient extends JFrame {
 				recordSeconds++;// refreshOnlineDelay
 				switch (recordSeconds % refreshOnlineDelay) {
 				// 更新在线病人
-				case 0:
-					recordSeconds = 0;
-					patientManagePanel.refreshOnlinePatientListTask();
-					break;
+					case 0 :
+						recordSeconds = 0;
+						patientManagePanel.refreshOnlinePatientListTask();
+						break;
 				}
 			}
 		}

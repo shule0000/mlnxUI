@@ -10,6 +10,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,21 +41,25 @@ import com.medlinx.core.patient.PatientList;
 import com.mlnx.pms.core.Group;
 
 public class RealECGPanel extends JPanel {
-
-	private final JSplitPane splitPane = new JSplitPane();
-	private JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+	private final JSplitPane splitPane = new JSplitPane();// 实时心电
+	private JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP); // 单病人显示和多病人显示
 	private JPanel multiPanel = new JPanel(new GridLayout(2, 2));
 	private JPanel panel1 = new JPanel(new GridLayout(1, 1));
 	private JPanel panel2 = new JPanel(new GridLayout(1, 1));
 	private JPanel panel3 = new JPanel(new GridLayout(1, 1));
 	private JPanel panel4 = new JPanel(new GridLayout(1, 1));
+	// 判断当前panel是否被占用
 	private boolean _panel1;
 	private boolean _panel2;
 	private boolean _panel3;
 	private boolean _panel4;
-	private List<Patient> allPatients = new ArrayList<Patient>();
-	private List<Patient> prePatients = new ArrayList<Patient>();
-	private List<Patient> prePatients2 = new ArrayList<Patient>();
+
+	private List<Patient> allPatients = new ArrayList<Patient>();// 所有监控下的病人
+	private List<Patient> prePatients = new ArrayList<Patient>();// 上一次显示的 所有病人
+	private List<Patient> prePatients2 = new ArrayList<Patient>();// temp
+	private List<Patient> newPre = new ArrayList<Patient>();// 上一次显示过的且仍然在监控状态下的病人
+	private List<Patient> restPre = new ArrayList<Patient>();// 所有监控下的病人中上次未曾显示的病人
+	private List<Patient> tempPre = new ArrayList<Patient>();// temp
 
 	private static final double Location = 0.15;
 	private static final String TOPNODE_STRING = "被选择的在线病人列表";
@@ -195,7 +202,7 @@ public class RealECGPanel extends JPanel {
 			for (Group group : groups) {
 				Patient[] patients = patientsMap.get(group.getGroupId());
 				if (patients.length > 0) {
-					selectPatient(patients[0]);
+					// selectPatient(patients[0]);
 					isfind = true;
 					return;
 				}
@@ -204,7 +211,7 @@ public class RealECGPanel extends JPanel {
 
 		// 一个病人都没有
 		if (!isfind) {
-			selectPatient(null);
+			// selectPatient(null);
 			refreshECGTimer.stop();
 		}
 	}
@@ -264,7 +271,9 @@ public class RealECGPanel extends JPanel {
 	/**
 	 * 选中某个病人(病人管理界面点击实时心电调用)
 	 */
-	public void selectPatient(Patient selectPatient) {
+	public void selectPatient(Patient selectPatient2) {
+
+		// 查询当前监控状态下的所有病人
 		allPatients.clear();
 		for (RealECGGroup ecgGroup : groupList) {
 			Patient[] patients = patientsMap.get(ecgGroup.getGroupId());
@@ -275,46 +284,140 @@ public class RealECGPanel extends JPanel {
 			}
 
 		}
+
 		_panel1 = false;
 		_panel2 = false;
 		_panel3 = false;
 		_panel4 = false;
+		panel1.removeAll();
+		panel2.removeAll();
+		panel3.removeAll();
+		panel4.removeAll();
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		refreshECGTimer.stop();
-		this.selectPatient = selectPatient;
-		if (selectPatient != null && allPatients.size() > 0) {
+		this.selectPatient = selectPatient2;
+		// 如果有病人被监控
+		if (selectPatient2 != null && allPatients.size() > 0) {
 			selectDrawingPanel = this.selectPatient.getDrawingPanel();
 			isPreview = false;
-			panel1.removeAll();
-			panel2.removeAll();
-			panel3.removeAll();
-			panel4.removeAll();
 
-			panel1.add(this.selectPatient.getDrawingPanel2());
-			_panel1 = true;
-			prePatients.add(this.selectPatient);
-			for (int i = 0; i < allPatients.size(); i++) {
-				if (_panel4) {
-					break;
-				} else {
-					if (allPatients.get(i) != selectPatient) {
+			// 上次显示病人数量大于0， 表示不为第一次显示
+			if (prePatients.size() > 0) {
 
-						if (!_panel2) {
-							panel2.add(allPatients.get(i).getDrawingPanel2());
-							_panel2 = true;
-							prePatients.add(allPatients.get(i));
-						} else if (!_panel3) {
-							panel3.add(allPatients.get(i).getDrawingPanel2());
-							_panel3 = true;
-							prePatients.add(allPatients.get(i));
-						} else if (!_panel4) {
-							panel4.add(allPatients.get(i).getDrawingPanel2());
-							_panel4 = true;
-							prePatients.add(allPatients.get(i));
+				// 找出上次显示过且仍在监控状态下的病人
+				for (int i = 0; i < prePatients.size(); i++) {
+					for (int j = 0; j < allPatients.size(); j++) {
+						if (prePatients.get(i).getPatientID() == allPatients
+								.get(j).getPatientID()) {
+							newPre.add(prePatients.get(i));
+							break;
 						}
 					}
 				}
 
+				// 找出所有监控状态病人中上次未显示过的病人
+				for (int i = 0; i < allPatients.size(); i++) {
+					boolean exist = false;
+					for (int j = 0; j < newPre.size(); j++) {
+						if (allPatients.get(i).getPatientID() == newPre.get(j)
+								.getPatientID()) {
+							exist = true;
+							break;
+						}
+					}
+					if (!exist) {
+						restPre.add(allPatients.get(i));
+					}
+				}
+
+				// 把当前选择病人首先放入
+				panel1.add(this.selectPatient.getDrawingPanel2());
+
+				_panel1 = true;
+				tempPre.add(this.selectPatient);
+
+				// 把上次显示过的病人依次放入剩下位置
+				for (int i = 0; i < newPre.size(); i++) {
+					if (_panel4) {
+						break;
+					} else {
+						if (newPre.get(i) != selectPatient2) {
+							if (!_panel2) {
+								panel2.add(newPre.get(i).getDrawingPanel2());
+								_panel2 = true;
+								tempPre.add(newPre.get(i));
+							} else if (!_panel3) {
+								panel3.add(newPre.get(i).getDrawingPanel2());
+								_panel3 = true;
+								tempPre.add(newPre.get(i));
+							} else if (!_panel4) {
+								panel4.add(newPre.get(i).getDrawingPanel2());
+								_panel4 = true;
+								tempPre.add(newPre.get(i));
+							}
+						}
+					}
+				}
+
+				// 若还有位置，用剩余病人填充
+				for (int i = 0; i < restPre.size(); i++) {
+					if (_panel4) {
+						break;
+					} else {
+						if (restPre.get(i) != selectPatient2) {
+							if (!_panel2) {
+								panel2.add(restPre.get(i).getDrawingPanel2());
+								_panel2 = true;
+								tempPre.add(restPre.get(i));
+							} else if (!_panel3) {
+								panel3.add(restPre.get(i).getDrawingPanel2());
+								_panel3 = true;
+								tempPre.add(restPre.get(i));
+							} else if (!_panel4) {
+								panel4.add(restPre.get(i).getDrawingPanel2());
+								_panel4 = true;
+								tempPre.add(restPre.get(i));
+							}
+						}
+					}
+
+				}
+
+				prePatients.clear();
+				prePatients.addAll(tempPre);
+				newPre.clear();
+				tempPre.clear();
+				restPre.clear();
+			} else {
+				// 表示第一次点击实时心电显示
+				panel1.add(this.selectPatient.getDrawingPanel2());
+				_panel1 = true;
+				prePatients.add(this.selectPatient);
+				for (int i = 0; i < allPatients.size(); i++) {
+					if (_panel4) {
+						break;
+					} else {
+						if (allPatients.get(i) != selectPatient2) {
+							if (!_panel2) {
+								panel2.add(allPatients.get(i)
+										.getDrawingPanel2());
+								_panel2 = true;
+								prePatients.add(allPatients.get(i));
+							} else if (!_panel3) {
+								panel3.add(allPatients.get(i)
+										.getDrawingPanel2());
+								_panel3 = true;
+								prePatients.add(allPatients.get(i));
+							} else if (!_panel4) {
+								panel4.add(allPatients.get(i)
+										.getDrawingPanel2());
+								_panel4 = true;
+								prePatients.add(allPatients.get(i));
+							}
+						}
+					}
+
+				}
 			}
 
 			multiPanel.add(panel1);
@@ -339,13 +442,12 @@ public class RealECGPanel extends JPanel {
 		splitPane.updateUI();
 		refreshECGTimer.start();
 	}
-
 	/**
 	 * 选中某个病人(病人列表树点击病人调用)
 	 * 
 	 * @param selectPatient
 	 */
-	public void selectPatient2(Patient selectPatient) {
+	public void selectPatient2(Patient selectPatient2) {
 
 		prePatients2.clear();
 		_panel1 = false;
@@ -354,7 +456,7 @@ public class RealECGPanel extends JPanel {
 		_panel4 = false;
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		refreshECGTimer.stop();
-		this.selectPatient = selectPatient;
+		this.selectPatient = selectPatient2;
 
 		selectDrawingPanel = this.selectPatient.getDrawingPanel();
 		isPreview = false;
@@ -370,7 +472,7 @@ public class RealECGPanel extends JPanel {
 			if (_panel4) {
 				break;
 			} else {
-				if (prePatients.get(i) != selectPatient) {
+				if (prePatients.get(i) != selectPatient2) {
 
 					if (!_panel2) {
 						panel2.add(prePatients.get(i).getDrawingPanel2());
@@ -404,10 +506,6 @@ public class RealECGPanel extends JPanel {
 		refreshECGTimer.start();
 	}
 
-	public void test() {
-		System.out.println("size11111111----" + prePatients.size());
-		System.out.println("size22222222----" + prePatients2.size());
-	}
 	// 病人列表效果
 	class PatientTreeCell extends JPanel implements TreeCellRenderer {
 

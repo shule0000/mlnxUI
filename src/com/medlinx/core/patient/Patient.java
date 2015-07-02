@@ -1,5 +1,7 @@
 package com.medlinx.core.patient;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -74,7 +76,7 @@ public class Patient implements Cloneable {
 		return isSelected;
 	}
 
-	public void setSelected(boolean isSelected, MLnxClient mLnxClient) {
+	public void setSelected(boolean isSelected, final MLnxClient mLnxClient) {
 		if (this.isSelected == isSelected)
 			return;
 		this.isSelected = isSelected;
@@ -85,6 +87,14 @@ public class Patient implements Cloneable {
 					this.patientData.getDataBuffer());
 			drawingPanel2 = new DrawingPanel2(mLnxClient,
 					this.patientData.getDataBuffer());
+			drawingPanel2.addMouseListener(new MouseAdapter() {
+				public void mouseClicked(MouseEvent e) {
+					if (e.getClickCount() == 2) {
+						mLnxClient.getRealECGPanel().selectPatient2(
+								patientData.getDataBuffer().getPatient());
+					}
+				}
+			});
 		} else {
 			// 关闭databuffer
 			this.patientData.end();

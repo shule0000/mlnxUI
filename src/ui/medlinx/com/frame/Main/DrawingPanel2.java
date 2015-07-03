@@ -1969,7 +1969,9 @@ public class DrawingPanel2 extends JPanel
 		} else if (e.getSource() == leadSelectButton) {
 			ChoseLeadDialog choseLeadDialog = new ChoseLeadDialog(mainFrame,
 					DrawingPanel2.this, patient);
-			choseLeadDialog.setSelectChannelFlag(selectChannelFlag);
+			boolean selectChannelFlag2[] = {true, true, true, true, true, true,
+					true, true, true, true, true, true};
+			choseLeadDialog.setSelectChannelFlag(selectChannelFlag2);
 		}
 	}
 	/*

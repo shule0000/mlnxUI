@@ -216,6 +216,9 @@ public class DrawingPanel extends JPanel
 
 	private MyComponentListener resizeListener;
 
+	private int model = 1;
+	private JPanel devInfoBottom;
+
 	/**
 	 * constructor
 	 * 
@@ -354,8 +357,9 @@ public class DrawingPanel extends JPanel
 	/**
 	 * 选择显示的导联
 	 */
-	public void selectChannel(boolean[] selectChannelFlag) {
+	public void selectChannel(boolean[] selectChannelFlag, int model) {
 
+		this.model = model;
 		endDraw();
 		while (!finishTTimesDrawECG);
 		int sumSelectLeads = 0;
@@ -375,6 +379,27 @@ public class DrawingPanel extends JPanel
 		this.selectDisplayBufferList = selectDisplayBufferList;
 		this.validSelectChanelNumb = sumSelectLeads;
 		this.selectChannelFlag = selectChannelFlag;
+
+		devInfoBottom.removeAll();
+		if (model == 1) {
+			for (int i = 0; i < leadLabels.size(); i++) {
+				leadLabels.get(i).setSize(new Dimension(20, 20));
+				leadLabels.get(i).setBackground(informationColor);
+				leadLabels.get(i).setForeground(Style.InfoAreaForegroundColor);
+				devInfoBottom.add(leadLabels.get(i));
+			}
+		} else {
+			for (int i = 0; i < leadLabels.size(); i++) {
+				if (i != 4 && i != 5 && i != 6 && i != 7 && i != 9) {
+					leadLabels.get(i).setSize(new Dimension(20, 20));
+					leadLabels.get(i).setBackground(informationColor);
+					leadLabels.get(i).setForeground(
+							Style.InfoAreaForegroundColor);
+					devInfoBottom.add(leadLabels.get(i));
+				}
+			}
+
+		}
 
 		restartDraw();
 	}
@@ -828,7 +853,7 @@ public class DrawingPanel extends JPanel
 
 		// devInfoBottom: the panel contains all lead icons,
 		// located at bottom of devInfoPanel
-		JPanel devInfoBottom = new JPanel();
+		devInfoBottom = new JPanel();
 		GridLayout gridLayout = new GridLayout(0, 5);
 		devInfoBottom.setLayout(gridLayout);
 		leadLabels = new ArrayList<JLabel>();
@@ -837,11 +862,13 @@ public class DrawingPanel extends JPanel
 			labelTemp.setIcon(SystemResources.leadIconList[i * 2]);
 			leadLabels.add(labelTemp);
 		}
+
 		for (JLabel labelTemp : leadLabels) {
 			labelTemp.setSize(new Dimension(20, 20));
 			labelTemp.setBackground(informationColor);
 			labelTemp.setForeground(Style.InfoAreaForegroundColor);
 			devInfoBottom.add(labelTemp);
+
 		}
 		devInfoBottom.setForeground(Style.InfoAreaForegroundColor);
 		devInfoBottom.setBackground(informationColor);
@@ -1554,17 +1581,35 @@ public class DrawingPanel extends JPanel
 		int header = dataBuffer.getElectrodeHeader();
 		int j = 1;
 		boolean headerDetached = false;
-		for (int i = 0; i < 10; i++) {
-			if ((header & j) != 0) {
-				leadLabels.get(i).setIcon(
-						SystemResources.leadIconList[i * 2 + 1]);
-				headerDetached = true;
-			} else {
-				leadLabels.get(i).setIcon(SystemResources.leadIconList[i * 2]);
+		if (model == 1) {
+			for (int i = 0; i < 10; i++) {
+				if ((header & j) != 0) {
+					leadLabels.get(i).setIcon(
+							SystemResources.leadIconList[i * 2 + 1]);
+					headerDetached = true;
+				} else {
+					leadLabels.get(i).setIcon(
+							SystemResources.leadIconList[i * 2]);
+				}
+				j = j << 1;
+				leadLabels.get(i).revalidate();
+				leadLabels.get(i).repaint();
 			}
-			j = j << 1;
-			leadLabels.get(i).revalidate();
-			leadLabels.get(i).repaint();
+		} else {
+			for (int i = 0; i < 10; i++) {
+				if ((header & j) != 0 && i != 4 && i != 5 && i != 6 && i != 7
+						&& i != 9) {
+					leadLabels.get(i).setIcon(
+							SystemResources.leadIconList[i * 2 + 1]);
+					headerDetached = true;
+				} else {
+					leadLabels.get(i).setIcon(
+							SystemResources.leadIconList[i * 2]);
+				}
+				j = j << 1;
+				leadLabels.get(i).revalidate();
+				leadLabels.get(i).repaint();
+			}
 		}
 		if (headerDetached) {
 			// physical alarm not affected by
@@ -2050,7 +2095,9 @@ public class DrawingPanel extends JPanel
 		} else if (e.getSource() == leadSelectButton) {
 			ChoseLeadDialog choseLeadDialog = new ChoseLeadDialog(mainFrame,
 					DrawingPanel.this, patient);
-			choseLeadDialog.setSelectChannelFlag(selectChannelFlag);
+			boolean selectChannelFlag2[] = {true, true, true, true, true, true,
+					true, true, true, true, true, true};
+			choseLeadDialog.setSelectChannelFlag(selectChannelFlag2);
 		}
 	}
 	/*

@@ -2,7 +2,13 @@ package com.medlinx.core.databuff;
 
 import java.io.DataInputStream;
 import java.io.EOFException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,9 +40,9 @@ public class MultiChannelBuffer implements DataBufferInterface {
 
 	private static final DateFormat dateFormat = new SimpleDateFormat(
 			HttpConstants.TIMESTAMP_FORMAT);
-	private final EcgLead[] leadsTemp = { EcgLead.I, EcgLead.II, EcgLead.III,
+	private final EcgLead[] leadsTemp = {EcgLead.I, EcgLead.II, EcgLead.III,
 			EcgLead.aVR, EcgLead.aVL, EcgLead.aVF, EcgLead.V1, EcgLead.V2,
-			EcgLead.V3, EcgLead.V4, EcgLead.V5, EcgLead.V6 };
+			EcgLead.V3, EcgLead.V4, EcgLead.V5, EcgLead.V6};
 	private EcgLead[] leads;
 	private DataClient dataClient = null;
 	public int frequency;
@@ -186,8 +192,7 @@ public class MultiChannelBuffer implements DataBufferInterface {
 	private void eraseData() {
 		for (int j = 0; j < bufferList.size(); ++j) {
 			for (int i = 0; i < bufferList.get(j).length; ++i)
-				bufferList.get(j)[i] = SystemConstant.ECG_INVALIDVALUE;
-			;
+				bufferList.get(j)[i] = SystemConstant.ECG_INVALIDVALUE;;
 		}
 
 	}
@@ -365,8 +370,19 @@ public class MultiChannelBuffer implements DataBufferInterface {
 	// instead of chunk
 	private class ReadThreadMultiple extends Thread {
 		int countDown = 2000;
-
+		FileWriter out = null;
 		public void run() {
+			File directory = new File("");// 设定为当前文件夹
+			String path = directory.getAbsolutePath();
+			File file = new File(path + "/temp.txt");
+
+			try {
+				out = new FileWriter(file, true);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
 			// construct data client object
 			isLoading = true;
 			dataClient = DataClientFactory.getLoginDataClient();
@@ -476,6 +492,10 @@ public class MultiChannelBuffer implements DataBufferInterface {
 			try {
 				while (reading) {
 					int value = dataIn.readShort() & 0xFFFF;
+
+					out.append(value + "\r\n");
+
+					out.flush();
 					bufferList.get(currentChannel)[currentIndex] = value;
 					currentChannel++;
 					if (currentChannel == patient.getChannelNum()) {
@@ -498,6 +518,7 @@ public class MultiChannelBuffer implements DataBufferInterface {
 					}
 				}
 
+				out.close();
 			} catch (EOFException e) {
 				// DebugTool.printLogDebug("No more data to read");
 				// countDown = 10;
@@ -506,7 +527,6 @@ public class MultiChannelBuffer implements DataBufferInterface {
 			}
 			return countNum;
 		}
-
 	}
 
 	@Override

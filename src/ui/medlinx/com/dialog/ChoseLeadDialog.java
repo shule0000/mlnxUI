@@ -31,6 +31,7 @@ import ui.medlinx.com.resource.SystemResources;
 
 import com.medlinx.core.constant.SystemConstant;
 import com.medlinx.core.patient.Patient;
+import com.sun.xml.bind.v2.model.core.Adapter;
 
 public class ChoseLeadDialog extends JDialog {
 
@@ -39,10 +40,13 @@ public class ChoseLeadDialog extends JDialog {
 	private Patient patient;
 	private JComponent ownerPanel;
 
+	private int model;
+
 	public ChoseLeadDialog(Frame owner, JComponent ownerPanel, Patient patient) {
 		super(owner);
 		this.patient = patient;
 		this.ownerPanel = ownerPanel;
+		model = 1;
 
 		setIconImage(SystemResources.MlnxImageIcon.getImage());
 		java.awt.Image image = new ImageIcon(SystemConstant.MAIN_BG_FILE_PATH)
@@ -56,6 +60,57 @@ public class ChoseLeadDialog extends JDialog {
 		titledBorder.setTitleColor(Color.CYAN);
 		titledBorder.setTitleFont(new Font("楷体", Font.PLAIN, 25));
 		panel.setBorder(titledBorder);
+
+		{
+			titledBorder = BorderFactory.createTitledBorder("导联模式");
+			titledBorder.setTitleColor(Color.CYAN);
+			titledBorder.setTitleFont(new Font("楷体", Font.PLAIN, 20));
+			JPanel chanelMode = new JPanel(new GridLayout(1, 2));
+
+			chanelMode.setBorder(titledBorder);
+			chanelMode.setOpaque(false);
+
+			JCheckBox checkBox3 = new JCheckBox("五导联");
+			checkBox3.setOpaque(false);
+			checkBox3.setFont(new Font("楷体", Font.PLAIN, 20));
+			checkBox3.setSelected(true);
+			checkBox3.setForeground(Color.WHITE);
+			checkBox3.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					// TODO Auto-generated method stub
+					JCheckBox checkBox3 = (JCheckBox) e.getSource();
+					fiveChanel(checkBox3.isSelected());
+				}
+
+			});
+
+			JCheckBox checkBox4 = new JCheckBox("十导联");
+			checkBox4.setOpaque(false);
+			checkBox4.setFont(new Font("楷体", Font.PLAIN, 20));
+			checkBox4.setSelected(true);
+			checkBox4.setForeground(Color.WHITE);
+			checkBox4.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					// TODO Auto-generated method stub
+					JCheckBox checkBox4 = (JCheckBox) e.getSource();
+					tenChanel(checkBox4.isSelected());
+				}
+
+			});
+			chanelMode.add(checkBox4);
+			chanelMode.add(checkBox3);
+
+			ButtonGroup bg = new ButtonGroup();
+			bg.add(checkBox4);
+			bg.add(checkBox3);
+
+			panel.add(chanelMode);
+
+		}
 
 		// 导联
 		{
@@ -103,20 +158,37 @@ public class ChoseLeadDialog extends JDialog {
 			checkBox.setOpaque(false);
 			checkBox.setFont(new Font("楷体", Font.PLAIN, 20));
 			checkBox.setForeground(Color.WHITE);
-			checkBox.addChangeListener(new ChangeListener() {
+			checkBox.addActionListener(new ActionListener() {
 
 				@Override
-				public void stateChanged(ChangeEvent e) {
+				public void actionPerformed(ActionEvent e) {
+					// TODO Auto-generated method stub
 					JCheckBox checkBox = (JCheckBox) e.getSource();
 					setGroup(checkBox.isSelected());
 				}
 			});
+			// checkBox.addChangeListener(new ChangeListener() {
+			//
+			// @Override
+			// public void stateChanged(ChangeEvent e) {
+			//
+			// }
+			// });
 
 			JCheckBox checkBox2 = new JCheckBox("多导联选择");
 			checkBox2.setOpaque(false);
 			checkBox2.setFont(new Font("楷体", Font.PLAIN, 20));
 			checkBox2.setSelected(true);
 			checkBox2.setForeground(Color.WHITE);
+			checkBox2.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					// TODO Auto-generated method stub
+					JCheckBox checkBox2 = (JCheckBox) e.getSource();
+					cancelGroup(checkBox2.isSelected());
+				}
+			});
 
 			ButtonGroup buttonGroup = new ButtonGroup();
 			buttonGroup.add(checkBox);
@@ -143,8 +215,9 @@ public class ChoseLeadDialog extends JDialog {
 					if (ChoseLeadDialog.this.ownerPanel instanceof PatientManagePanel) {
 					} else if (ChoseLeadDialog.this.ownerPanel instanceof DrawingPanel) {
 						DrawingPanel drawingPanel = (DrawingPanel) ChoseLeadDialog.this.ownerPanel;
-						drawingPanel.selectChannel(selectChannelFlag);
+						drawingPanel.selectChannel(selectChannelFlag, model);
 					}
+					ChoseLeadDialog.this.close();
 				}
 			});
 			panel2.add(button);
@@ -162,27 +235,97 @@ public class ChoseLeadDialog extends JDialog {
 				(int) (dimension.getHeight() / 2 - this.getHeight() / 2));
 		this.setVisible(true);
 	}
-	
-	public void setSelectChannelFlag(boolean[] selectChannelFlag){
+
+	public void setSelectChannelFlag(boolean[] selectChannelFlag) {
 		for (int i = 0; i < leadRadioButtons.length; i++) {
 			leadRadioButtons[i].setSelected(selectChannelFlag[i]);
 		}
 		this.repaint();
 	}
 
-	private void setGroup(boolean isGroup) {
-		if (isGroup) {
+	private void setGroup(boolean b) {
+		if (b) {
+			if (model == 1) {
+				for (int i = 0; i < leadRadioButtons.length; i++) {
+					leadRadioButtonsGroup.remove(leadRadioButtons[i]);
+				}
+				for (int i = 0; i < leadRadioButtons.length; i++) {
+					leadRadioButtonsGroup.add(leadRadioButtons[i]);
+				}
+			} else {
+				for (int i = 0; i < leadRadioButtons.length; i++) {
+					leadRadioButtonsGroup.remove(leadRadioButtons[i]);
+				}
+				for (int i = 0; i < leadRadioButtons.length; i++) {
+					leadRadioButtonsGroup.add(leadRadioButtons[i]);
+				}
+			}
+
+		}
+
+	}
+
+	public void cancelGroup(boolean b) {
+		if (b) {
 			for (int i = 0; i < leadRadioButtons.length; i++) {
 				leadRadioButtonsGroup.remove(leadRadioButtons[i]);
 			}
-			for (int i = 0; i < leadRadioButtons.length; i++) {
-				leadRadioButtonsGroup.add(leadRadioButtons[i]);
+
+			if (model == 1) {
+				for (int i = 0; i < leadRadioButtons.length; i++) {
+					leadRadioButtons[i].setSelected(true);
+				}
+			} else {
+				leadRadioButtons[10].setSelected(true);
+				leadRadioButtons[5].setSelected(true);
+				leadRadioButtons[4].setSelected(true);
+				leadRadioButtons[3].setSelected(true);
+				leadRadioButtons[2].setSelected(true);
+				leadRadioButtons[1].setSelected(true);
+				leadRadioButtons[0].setSelected(true);
 			}
-		} else {
+
+		}
+
+	}
+
+	private void fiveChanel(boolean b) {
+		if (b) {
+			model = 2;
+			leadRadioButtons[6].setVisible(false);
+			leadRadioButtons[7].setVisible(false);
+			leadRadioButtons[8].setVisible(false);
+			leadRadioButtons[9].setVisible(false);
+			leadRadioButtons[11].setVisible(false);
+
+			leadRadioButtons[6].setSelected(false);
+			leadRadioButtons[7].setSelected(false);
+			leadRadioButtons[8].setSelected(false);
+			leadRadioButtons[9].setSelected(false);
+			leadRadioButtons[11].setSelected(false);
+
+			leadRadioButtons[10].setSelected(true);
+			leadRadioButtons[5].setSelected(true);
+			leadRadioButtons[4].setSelected(true);
+			leadRadioButtons[3].setSelected(true);
+			leadRadioButtons[2].setSelected(true);
+			leadRadioButtons[1].setSelected(true);
+			leadRadioButtons[0].setSelected(true);
+		}
+
+	}
+
+	private void tenChanel(boolean b) {
+		if (b) {
+			model = 1;
 			for (int i = 0; i < leadRadioButtons.length; i++) {
-				leadRadioButtonsGroup.remove(leadRadioButtons[i]);
+				leadRadioButtons[leadRadioButtons.length - 1 - i]
+						.setVisible(true);
+				leadRadioButtons[leadRadioButtons.length - 1 - i]
+						.setSelected(true);
 			}
 		}
+
 	}
 
 	public void close() {

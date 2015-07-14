@@ -64,12 +64,12 @@ public class PatientManagePanel extends JSplitPane implements ItemListener {
 	private static final double UsrLocation = 0.2;
 	private static final double GroupLocation = 0.6;
 	private static final double PatientGroupLocation = 0.8;
-	private static final String GROUPFIELDS_STRINGS[] = {"群组名", "群组类型", "病人数量"};
-	private static final String PATIENTFIELDS_STRINGS[] = {"病人ID", "病人状态",
-			"病人名字", "病人性别", "设备信息", "监护信息"};
-	private static final String[] PATIENTSTATE_STRINGS = {"全部病人", "监护病人",
-			"在线未监护病人", "在线病人"};
-	private static final String[] PATIENTSEX_STRINGS = {"全部", "男", "女"};
+	private static final String GROUPFIELDS_STRINGS[] = { "群组名", "群组类型", "病人数量" };
+	private static final String PATIENTFIELDS_STRINGS[] = { "病人ID", "病人状态",
+			"病人名字", "病人性别", "设备信息", "监护信息" };
+	private static final String[] PATIENTSTATE_STRINGS = { "全部病人", "监护病人",
+			"在线未监护病人", "在线病人" };
+	private static final String[] PATIENTSEX_STRINGS = { "全部", "男", "女" };
 	private static final Color TitleColor = Color.BLUE;
 
 	private MLnxClient mLnxClient;
@@ -650,6 +650,7 @@ public class PatientManagePanel extends JSplitPane implements ItemListener {
 			}
 		}
 	}
+
 	// JComboBox 筛选监听
 	@Override
 	public void itemStateChanged(ItemEvent e) {
@@ -690,20 +691,20 @@ public class PatientManagePanel extends JSplitPane implements ItemListener {
 			return;
 		}
 		switch (selectPatientStateIndex) {
-			case 0 :
-				patients.addAll(selectPatientList.getPatients().values());
-				break;
-			case 1 :
-				patients.addAll(selectPatientList.getSelectedOnlinePatients()
-						.values());
-				break;
-			case 2 :
-				patients.addAll(selectPatientList.getUnSelectedOnlinePatients()
-						.values());
-				break;
-			case 3 :
-				patients.addAll(selectPatientList.getOnlinePatients().values());
-				break;
+		case 0:
+			patients.addAll(selectPatientList.getPatients().values());
+			break;
+		case 1:
+			patients.addAll(selectPatientList.getSelectedOnlinePatients()
+					.values());
+			break;
+		case 2:
+			patients.addAll(selectPatientList.getUnSelectedOnlinePatients()
+					.values());
+			break;
+		case 3:
+			patients.addAll(selectPatientList.getOnlinePatients().values());
+			break;
 		}
 		// 性别
 		if (selectPatientSexIndex > 0) {
@@ -929,12 +930,12 @@ public class PatientManagePanel extends JSplitPane implements ItemListener {
 			// "群组ID", "群组名", "群组类型","病人数量", "操作病人"
 			Group group = groupList.get(rowIndex);
 			switch (columnIndex) {
-				case 0 :
-					return group.getName();
-				case 1 :
-					return group.getType();
-				case 2 :
-					return group.getCount();
+			case 0:
+				return group.getName();
+			case 1:
+				return group.getType();
+			case 2:
+				return group.getCount();
 			}
 			return null;
 		}
@@ -1012,14 +1013,14 @@ public class PatientManagePanel extends JSplitPane implements ItemListener {
 		public boolean isCellEditable(int rowIndex, int columnIndex) {
 			if (rowIndex == 0) {
 				switch (columnIndex) {
-					case 0 :
-						return true;
-					case 1 :
-						return true;
-					case 2 :
-						return true;
-					case 3 :
-						return true;
+				case 0:
+					return true;
+				case 1:
+					return true;
+				case 2:
+					return true;
+				case 3:
+					return true;
 				}
 				return false;
 			} else {
@@ -1041,36 +1042,34 @@ public class PatientManagePanel extends JSplitPane implements ItemListener {
 			JPanel panel = new JPanel(new GridLayout(1, 1));
 			if (row == 0) {
 				switch (column) {
-					case 0 :
-						if (searchPIDLabel == null) {
-							searchPIDLabel = new JTextField("",
-									JTextField.CENTER);
-							searchPIDLabel
-									.addKeyListener(new InputID_NameListener());
-						}
-						panel.add(searchPIDLabel);
-						break;
-					case 1 :
-						if (patientStateComboBox == null)
-							patientStateComboBox = new JComboBox<String>(
-									PATIENTSTATE_STRINGS);
-						panel.add(patientStateComboBox);
-						break;
-					case 2 :
-						if (searchPNameLabel == null) {
-							searchPNameLabel = new JTextField("",
-									JTextField.CENTER);
-							searchPNameLabel
-									.addKeyListener(new InputID_NameListener());
-						}
-						panel.add(searchPNameLabel);
-						break;
-					case 3 :
-						if (patientSexComboBox == null)
-							patientSexComboBox = new JComboBox<String>(
-									PATIENTSEX_STRINGS);
-						panel.add(patientSexComboBox);
-						break;
+				case 0:
+					if (searchPIDLabel == null) {
+						searchPIDLabel = new JTextField("", JTextField.CENTER);
+						searchPIDLabel
+								.addKeyListener(new InputID_NameListener());
+					}
+					panel.add(searchPIDLabel);
+					break;
+				case 1:
+					if (patientStateComboBox == null)
+						patientStateComboBox = new JComboBox<String>(
+								PATIENTSTATE_STRINGS);
+					panel.add(patientStateComboBox);
+					break;
+				case 2:
+					if (searchPNameLabel == null) {
+						searchPNameLabel = new JTextField("", JTextField.CENTER);
+						searchPNameLabel
+								.addKeyListener(new InputID_NameListener());
+					}
+					panel.add(searchPNameLabel);
+					break;
+				case 3:
+					if (patientSexComboBox == null)
+						patientSexComboBox = new JComboBox<String>(
+								PATIENTSEX_STRINGS);
+					panel.add(patientSexComboBox);
+					break;
 				}
 			} else {
 				if (patientTableSelection != -1 && patientTableSelection == row) {
@@ -1088,59 +1087,59 @@ public class PatientManagePanel extends JSplitPane implements ItemListener {
 					JLabel label = new JLabel("", JLabel.CENTER);
 					label.setForeground(labelForgenColor);
 					switch (column) {
-						case 0 :
-							label.setText(patient.getPatientID() + "");
-							panel.add(label);
-							break;
-						case 1 :
-							if (patient.isSelected() && patient.isOnline()) {
-								label.setText(PATIENTSTATE_STRINGS[1]);
-							} else if (patient.isOnline()) {
-								label.setText(PATIENTSTATE_STRINGS[2]);
-							} else {
-								label.setText("离线病人");
-							}
-							panel.add(label);
-							break;
-						case 2 :
-							label.setText(patient.getPatientName() + "");
-							panel.add(label);
-							break;
-						case 3 :
-							label.setText(patient.getGender().equals(
-									Gender.MALE.toString()) ? "男" : "女");
-							panel.add(label);
-							break;
-						case 4 :
-							if (patient.getDevInfo() != null) {
-								panel.setLayout(new GridLayout(2, 1));
-								JLabel idLabel = new JLabel("设备ID: ");
-								JLabel modeLabel = new JLabel("设备模式:");
-								JLabel iidLabel = new JLabel(patient
-										.getDevInfo().getDeviceID());
-								JLabel mmodeLabel = new JLabel(patient
-										.getDevInfo().getModeName());
-								idLabel.setForeground(labelForgenColor);
-								modeLabel.setForeground(labelForgenColor);
-								mmodeLabel.setForeground(labelForgenColor);
-								iidLabel.setForeground(labelForgenColor);
+					case 0:
+						label.setText(patient.getPatientID() + "");
+						panel.add(label);
+						break;
+					case 1:
+						if (patient.isSelected() && patient.isOnline()) {
+							label.setText(PATIENTSTATE_STRINGS[1]);
+						} else if (patient.isOnline()) {
+							label.setText(PATIENTSTATE_STRINGS[2]);
+						} else {
+							label.setText("离线病人");
+						}
+						panel.add(label);
+						break;
+					case 2:
+						label.setText(patient.getPatientName() + "");
+						panel.add(label);
+						break;
+					case 3:
+						label.setText(patient.getGender().equals(
+								Gender.MALE.toString()) ? "男" : "女");
+						panel.add(label);
+						break;
+					case 4:
+						if (patient.getDevInfo() != null) {
+							panel.setLayout(new GridLayout(2, 1));
+							JLabel idLabel = new JLabel("设备ID: ");
+							JLabel modeLabel = new JLabel("设备模式:");
+							JLabel iidLabel = new JLabel(patient.getDevInfo()
+									.getDeviceID());
+							JLabel mmodeLabel = new JLabel(patient.getDevInfo()
+									.getModeName());
+							idLabel.setForeground(labelForgenColor);
+							modeLabel.setForeground(labelForgenColor);
+							mmodeLabel.setForeground(labelForgenColor);
+							iidLabel.setForeground(labelForgenColor);
 
-								JPanel panel2 = new JPanel();
-								panel2.setBackground(panel.getBackground());
-								panel.add(panel2);
-								panel2.add(idLabel);
-								panel2.add(iidLabel);
-								panel.add(panel2);
-								panel2 = new JPanel();
-								panel2.setBackground(panel.getBackground());
-								panel2.add(modeLabel);
-								panel2.add(mmodeLabel);
-								panel.add(panel2);
-							} else {
-								label.setText("未绑定设备");
-								panel.add(label);
-							}
-							break;
+							JPanel panel2 = new JPanel();
+							panel2.setBackground(panel.getBackground());
+							panel.add(panel2);
+							panel2.add(idLabel);
+							panel2.add(iidLabel);
+							panel.add(panel2);
+							panel2 = new JPanel();
+							panel2.setBackground(panel.getBackground());
+							panel2.add(modeLabel);
+							panel2.add(mmodeLabel);
+							panel.add(panel2);
+						} else {
+							label.setText("未绑定设备");
+							panel.add(label);
+						}
+						break;
 					}
 				}
 			}
@@ -1170,34 +1169,31 @@ public class PatientManagePanel extends JSplitPane implements ItemListener {
 			JPanel panel = new JPanel(new GridLayout(1, 1));
 			if (row == 0) {
 				switch (column) {
-					case 0 :
-						if (searchPIDLabel == null)
-							searchPIDLabel = new JTextField("",
-									JTextField.CENTER);
-						panel.add(searchPIDLabel);
-						break;
-					case 1 :
-						if (patientStateComboBox == null)
-							patientStateComboBox = new JComboBox<String>(
-									PATIENTSTATE_STRINGS);
-						patientStateComboBox
-								.addItemListener(PatientManagePanel.this);
-						panel.add(patientStateComboBox);
-						break;
-					case 2 :
-						if (searchPNameLabel == null)
-							searchPNameLabel = new JTextField("",
-									JTextField.CENTER);
-						panel.add(searchPNameLabel);
-						break;
-					case 3 :
-						if (patientSexComboBox == null)
-							patientSexComboBox = new JComboBox<String>(
-									PATIENTSEX_STRINGS);
-						patientSexComboBox
-								.addItemListener(PatientManagePanel.this);
-						panel.add(patientSexComboBox);
-						break;
+				case 0:
+					if (searchPIDLabel == null)
+						searchPIDLabel = new JTextField("", JTextField.CENTER);
+					panel.add(searchPIDLabel);
+					break;
+				case 1:
+					if (patientStateComboBox == null)
+						patientStateComboBox = new JComboBox<String>(
+								PATIENTSTATE_STRINGS);
+					patientStateComboBox
+							.addItemListener(PatientManagePanel.this);
+					panel.add(patientStateComboBox);
+					break;
+				case 2:
+					if (searchPNameLabel == null)
+						searchPNameLabel = new JTextField("", JTextField.CENTER);
+					panel.add(searchPNameLabel);
+					break;
+				case 3:
+					if (patientSexComboBox == null)
+						patientSexComboBox = new JComboBox<String>(
+								PATIENTSEX_STRINGS);
+					patientSexComboBox.addItemListener(PatientManagePanel.this);
+					panel.add(patientSexComboBox);
+					break;
 				}
 			} else {
 			}
@@ -1402,6 +1398,7 @@ public class PatientManagePanel extends JSplitPane implements ItemListener {
 				}
 			}).start();
 		}
+
 		public void modifyPatient(final com.mlnx.pms.core.Patient patient) {
 			new Thread(new Runnable() {
 
@@ -1732,6 +1729,7 @@ public class PatientManagePanel extends JSplitPane implements ItemListener {
 					new Patient[0]);
 			for (int i = 0; i < patients.length; i++) {
 				patients[i].getDrawingPanel().updateInfoPanel();
+				patients[i].getDrawingPanel2().updateInfoPanel();
 				if (minAlarmLevel > patients[i].getDrawingPanel().getLevel())
 					minAlarmLevel = patients[i].getDrawingPanel().getLevel();
 			}

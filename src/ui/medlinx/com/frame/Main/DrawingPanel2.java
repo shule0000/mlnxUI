@@ -77,10 +77,8 @@ import com.mlnx.pms.core.Device.Mode;
  * @author Jianqiao Feng
  * 
  */
-public class DrawingPanel2 extends JPanel
-		implements
-			ActionListener,
-			ItemListener {
+public class DrawingPanel2 extends JPanel implements ActionListener,
+		ItemListener {
 
 	private static final long serialVersionUID = 1L;
 	private static final int maxDataFrequency = 300;
@@ -90,7 +88,7 @@ public class DrawingPanel2 extends JPanel
 													// jump backward
 	private static final float WARNINGTHLAG = -2.5f;// threshold need to jump
 													// forward
-	private static final int[] channelNumList = {1, 7, 12};
+	private static final int[] channelNumList = { 1, 7, 12 };
 	private static final int ALARM_INTERVAL = 1000;
 
 	/* fields related to drawing */
@@ -161,17 +159,18 @@ public class DrawingPanel2 extends JPanel
 	private boolean cancelFlag; // 关闭所有报警
 
 	// different modes of device
-	private String[] modeStrs = {"高精度ECG", "尖峰监测", "心电图机", "普通监护", "运动监护"};
-	private Mode[] modeOptions = {Mode.ECG_ADVANCED,
+	private String[] modeStrs = { "高精度ECG", "尖峰监测", "心电图机", "普通监护", "运动监护" };
+	private Mode[] modeOptions = { Mode.ECG_ADVANCED,
 			Mode.ECG_ADVANCED_WITH_SPIKE_DETECT, Mode.ECG_ELECTROCARDIOGRAPH,
-			Mode.ECG_NORMAL, Mode.ECG_OPERATING_ROOM};
-	private String[] v2hRatioStrs = {"6.25mm/s", "12.5mm/s", "25mm/s", "50mm/s"};
-	private float[] v2hRatioOptions = {6.25f, 12.5f, 25f, 50f};
-	private String[] verticalScaleStrs = {"2.5mm/mV", "5mm/mV", "10mm/mV",
-			"15mm/mV", "20mm/mV"};
-	private float[] verticalScaleOptions = {2.5f, 5.0f, 10.0f, 15.0f, 20.0f};
-	private DataType[] channelNumOptions = {DataType.ECG_1CH, DataType.ECG_3CH,
-			DataType.ECG_8CH};
+			Mode.ECG_NORMAL, Mode.ECG_OPERATING_ROOM };
+	private String[] v2hRatioStrs = { "6.25mm/s", "12.5mm/s", "25mm/s",
+			"50mm/s" };
+	private float[] v2hRatioOptions = { 6.25f, 12.5f, 25f, 50f };
+	private String[] verticalScaleStrs = { "2.5mm/mV", "5mm/mV", "10mm/mV",
+			"15mm/mV", "20mm/mV" };
+	private float[] verticalScaleOptions = { 2.5f, 5.0f, 10.0f, 15.0f, 20.0f };
+	private DataType[] channelNumOptions = { DataType.ECG_1CH,
+			DataType.ECG_3CH, DataType.ECG_8CH };
 
 	private boolean initializeFlag = true;
 	private boolean[] peakFlag;
@@ -351,10 +350,11 @@ public class DrawingPanel2 extends JPanel
 	 * 选择显示的导联
 	 */
 	private void selectChannel() {
-		boolean[] selectChannelFlag = {true, true, true, false, false, false,
-				true, false, false, false, false, false};
+		boolean[] selectChannelFlag = { true, true, true, false, false, false,
+				false, false, false, false, true, false };
 		endDraw();
-		while (!finishTTimesDrawECG);
+		while (!finishTTimesDrawECG)
+			;
 		int sumSelectLeads = 0;
 		ArrayList<float[]> selectDisplayBufferList = new ArrayList<float[]>();
 		selectChanelNameList = new ArrayList<String>();
@@ -393,7 +393,7 @@ public class DrawingPanel2 extends JPanel
 	 * initialize all UI components
 	 */
 	// @SuppressWarnings("deprecation")
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void initializeComponents() {
 		setLayout(null);
 		settingButton = new JButton("显示设置");
@@ -798,6 +798,7 @@ public class DrawingPanel2 extends JPanel
 		this.addMouseListener(new ECGMouseListener());
 		this.addMouseMotionListener(new ECGMouseMotionListener());
 	}
+
 	private JLabel addAlarmLabel(String string) {
 		JLabel label = new JLabel(string, JLabel.CENTER);
 		label.setForeground(Color.RED);
@@ -1969,11 +1970,12 @@ public class DrawingPanel2 extends JPanel
 		} else if (e.getSource() == leadSelectButton) {
 			ChoseLeadDialog choseLeadDialog = new ChoseLeadDialog(mainFrame,
 					DrawingPanel2.this, patient);
-			boolean selectChannelFlag2[] = {true, true, true, true, true, true,
-					true, true, true, true, true, true};
+			boolean selectChannelFlag2[] = { true, true, true, true, true,
+					true, true, true, true, true, true, true };
 			choseLeadDialog.setSelectChannelFlag(selectChannelFlag2);
 		}
 	}
+
 	/*
 	 * JFileChooser class and renew approveSelection funtion
 	 */

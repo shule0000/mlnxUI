@@ -26,6 +26,7 @@ import ui.medlinx.com.extra.SettingParameters;
 import com.medlinx.core.client.DataClientFactory;
 import com.medlinx.core.client.MlnxDoctorClient;
 import com.medlinx.core.constant.SystemConstant;
+import com.medlinx.core.datafactory.DataFactory;
 import com.medlinx.core.patient.Patient;
 import com.mlnx.pms.client.DataClient;
 import com.mlnx.pms.client.ServerProcessingException;
@@ -40,9 +41,9 @@ public class MultiChannelBuffer implements DataBufferInterface {
 
 	private static final DateFormat dateFormat = new SimpleDateFormat(
 			HttpConstants.TIMESTAMP_FORMAT);
-	private final EcgLead[] leadsTemp = {EcgLead.I, EcgLead.II, EcgLead.III,
+	private final EcgLead[] leadsTemp = { EcgLead.I, EcgLead.II, EcgLead.III,
 			EcgLead.aVR, EcgLead.aVL, EcgLead.aVF, EcgLead.V1, EcgLead.V2,
-			EcgLead.V3, EcgLead.V4, EcgLead.V5, EcgLead.V6};
+			EcgLead.V3, EcgLead.V4, EcgLead.V5, EcgLead.V6 };
 	private EcgLead[] leads;
 	private DataClient dataClient = null;
 	public int frequency;
@@ -192,7 +193,8 @@ public class MultiChannelBuffer implements DataBufferInterface {
 	private void eraseData() {
 		for (int j = 0; j < bufferList.size(); ++j) {
 			for (int i = 0; i < bufferList.get(j).length; ++i)
-				bufferList.get(j)[i] = SystemConstant.ECG_INVALIDVALUE;;
+				bufferList.get(j)[i] = SystemConstant.ECG_INVALIDVALUE;
+			;
 		}
 
 	}
@@ -371,6 +373,7 @@ public class MultiChannelBuffer implements DataBufferInterface {
 	private class ReadThreadMultiple extends Thread {
 		int countDown = 2000;
 		FileWriter out = null;
+
 		public void run() {
 			File directory = new File("");// 设定为当前文件夹
 			String path = directory.getAbsolutePath();
@@ -677,29 +680,24 @@ public class MultiChannelBuffer implements DataBufferInterface {
 		if (deviceDataType == this.deviceDataType)
 			return;// no change
 		this.deviceDataType = deviceDataType;
-		DataClient dataClient = SystemConstant.constructDataClient();
+		DataClient dataClient = DataClientFactory.getLoginDataClient();
+		boolean configException = false;
 		try {
-			com.mlnx.pms.core.Patient p = dataClient
-					.getPatientById(getPatient().getPatientID());
-			String deviceID = p.getDeviceId();
-			if (deviceID == null) {
-				DebugTool.printLogDebug("设备离线！");
-			} else {
-				com.mlnx.pms.core.Device device = dataClient
-						.getDeviceById(deviceID);
-				device.setDataType(this.deviceDataType);
-				dataClient.configureDevice(device);
-				System.out.print("set up device: " + deviceID + "");
-			}
+			patient.getDevInfo().getDevice().setDataType(this.deviceDataType);
+			dataClient.configureDevice(patient.getDevInfo().getDevice());
+			System.out.print("set up device: "
+					+ patient.getDevInfo().getDevice().getId() + "");
 		} catch (ServerProcessingException e) {
-			// TODO Auto-generated catch block
+			configException = true;
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			configException = true;
 			e.printStackTrace();
 		} finally {
-			if (dataClient != null)
+			if (configException)
 				dataClient.close();
+			else
+				DataClientFactory.addDataClient(dataClient);
 		}
 	}
 }

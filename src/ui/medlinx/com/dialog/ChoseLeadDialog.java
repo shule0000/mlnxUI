@@ -215,7 +215,8 @@ public class ChoseLeadDialog extends JDialog {
 					if (ChoseLeadDialog.this.ownerPanel instanceof PatientManagePanel) {
 					} else if (ChoseLeadDialog.this.ownerPanel instanceof DrawingPanel) {
 						DrawingPanel drawingPanel = (DrawingPanel) ChoseLeadDialog.this.ownerPanel;
-						drawingPanel.selectChannel(selectChannelFlag, model);
+						drawingPanel.selectChannel2(selectChannelFlag, model);
+
 					}
 					ChoseLeadDialog.this.close();
 				}

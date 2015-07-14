@@ -31,6 +31,7 @@ public class Style {
 	public static Font InfoTitleFont = new Font("宋体", Font.PLAIN, 18);
 	public static Font InfoSubTitleFont = new Font("宋体", Font.PLAIN, 12);
 	public static Dimension InfoSubSectionDimension = new Dimension(150, 80);
+	public static Dimension InfoSubSectionDimension2 = new Dimension(150, 120);
 	public static final Dimension InfoButtonDimension = new Dimension(25, 25);
 	public static final Dimension ControlPanelDimension = new Dimension(150,
 			150);
@@ -51,13 +52,13 @@ public class Style {
 
 	public static int highAlarmDelay[] = {
 			(int) (1 / Style.highLabelAlarmHZ * 1000 * Style.highLabelShowPercent),
-			(int) (1 / Style.highLabelAlarmHZ * 1000 * (1 - Style.highLabelShowPercent))};
+			(int) (1 / Style.highLabelAlarmHZ * 1000 * (1 - Style.highLabelShowPercent)) };
 	public static int mediumAlarmDelay[] = {
 			(int) (1 / Style.mediumLabelAlarmHZ * 1000 * Style.mediumLabelShowPercent),
-			(int) (1 / Style.mediumLabelAlarmHZ * 1000 * (1 - Style.mediumLabelShowPercent))};
+			(int) (1 / Style.mediumLabelAlarmHZ * 1000 * (1 - Style.mediumLabelShowPercent)) };
 	public static int lowAlarmDelay[] = {
 			(int) (1 / Style.lowLabelAlarmHZ * 1000 * Style.lowLabelShowPercent),
-			(int) (1 / Style.lowLabelAlarmHZ * 1000 * (1 - Style.lowLabelShowPercent))};
+			(int) (1 / Style.lowLabelAlarmHZ * 1000 * (1 - Style.lowLabelShowPercent)) };
 
 	/*
 	 * print style
@@ -72,8 +73,8 @@ public class Style {
 	 * page size
 	 */
 	public static final Rectangle nomalPaperSize = new Rectangle(1100, 500);
-	public static final Rectangle[] paperSizeArr = {PageSize.A0, PageSize.A1,
-			PageSize.A2, PageSize.A3, PageSize.A4, nomalPaperSize};
+	public static final Rectangle[] paperSizeArr = { PageSize.A0, PageSize.A1,
+			PageSize.A2, PageSize.A3, PageSize.A4, nomalPaperSize };
 
 	// login bg color
 	public static final Color loginBGColor = new Color(176, 224, 230);

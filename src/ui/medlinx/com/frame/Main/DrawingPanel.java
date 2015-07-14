@@ -3,6 +3,7 @@ package ui.medlinx.com.frame.Main;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -64,6 +65,7 @@ import com.medlinx.core.alarm.AlertManager;
 import com.medlinx.core.alarm.MetaInformation;
 import com.medlinx.core.alarm.thread.AlarmShow;
 import com.medlinx.core.alarm.thread.AlarmTimer;
+import com.medlinx.core.client.MlnxDoctorClient;
 import com.medlinx.core.constant.SystemConstant;
 import com.medlinx.core.databuff.DataBufferInterface;
 import com.medlinx.core.patient.Patient;
@@ -77,10 +79,8 @@ import com.mlnx.pms.core.Device.Mode;
  * @author Jianqiao Feng
  * 
  */
-public class DrawingPanel extends JPanel
-		implements
-			ActionListener,
-			ItemListener {
+public class DrawingPanel extends JPanel implements ActionListener,
+		ItemListener {
 
 	private static final long serialVersionUID = 1L;
 	private static final int maxDataFrequency = 300;
@@ -90,7 +90,7 @@ public class DrawingPanel extends JPanel
 													// jump backward
 	private static final float WARNINGTHLAG = -2.5f;// threshold need to jump
 													// forward
-	private static final int[] channelNumList = {1, 7, 12};
+	private static final int[] channelNumList = { 1, 7, 12 };
 	private static final int ALARM_INTERVAL = 1000;
 
 	/* fields related to drawing */
@@ -138,7 +138,8 @@ public class DrawingPanel extends JPanel
 	private JButton leadSelectButton; // 导联选择
 	private JLabel labelWarningMessage;
 	private JLabel rssiLabel, batteryLabel, electrodeHeaderLabel;
-	private JLabel pressureLabel, oxygenLabel;
+	public JLabel pressureLabel, oxygenLabel;
+
 	private JLabel labelVerticalRange, labelV2hRatio, labelMode;
 	private JLabel bmpAlarmLabel, batteryAlarmLabel, wifiAlarmLabel,
 			headerAlarmLabel, waveformDistortionAlarmLabel;// 偏压过高波形失真
@@ -161,17 +162,18 @@ public class DrawingPanel extends JPanel
 	private boolean cancelFlag; // 关闭所有报警
 
 	// different modes of device
-	private String[] modeStrs = {"高精度ECG", "尖峰监测", "心电图机", "普通监护", "运动监护"};
-	private Mode[] modeOptions = {Mode.ECG_ADVANCED,
+	private String[] modeStrs = { "高精度ECG", "尖峰监测", "心电图机", "普通监护", "运动监护" };
+	private Mode[] modeOptions = { Mode.ECG_ADVANCED,
 			Mode.ECG_ADVANCED_WITH_SPIKE_DETECT, Mode.ECG_ELECTROCARDIOGRAPH,
-			Mode.ECG_NORMAL, Mode.ECG_OPERATING_ROOM};
-	private String[] v2hRatioStrs = {"6.25mm/s", "12.5mm/s", "25mm/s", "50mm/s"};
-	private float[] v2hRatioOptions = {6.25f, 12.5f, 25f, 50f};
-	private String[] verticalScaleStrs = {"2.5mm/mV", "5mm/mV", "10mm/mV",
-			"15mm/mV", "20mm/mV"};
-	private float[] verticalScaleOptions = {2.5f, 5.0f, 10.0f, 15.0f, 20.0f};
-	private DataType[] channelNumOptions = {DataType.ECG_1CH, DataType.ECG_3CH,
-			DataType.ECG_8CH};
+			Mode.ECG_NORMAL, Mode.ECG_OPERATING_ROOM };
+	private String[] v2hRatioStrs = { "6.25mm/s", "12.5mm/s", "25mm/s",
+			"50mm/s" };
+	private float[] v2hRatioOptions = { 6.25f, 12.5f, 25f, 50f };
+	private String[] verticalScaleStrs = { "2.5mm/mV", "5mm/mV", "10mm/mV",
+			"15mm/mV", "20mm/mV" };
+	private float[] verticalScaleOptions = { 2.5f, 5.0f, 10.0f, 15.0f, 20.0f };
+	private DataType[] channelNumOptions = { DataType.ECG_1CH,
+			DataType.ECG_3CH, DataType.ECG_8CH };
 
 	private boolean initializeFlag = true;
 	private boolean[] peakFlag;
@@ -216,8 +218,11 @@ public class DrawingPanel extends JPanel
 
 	private MyComponentListener resizeListener;
 
-	private int model = 1;
+	public int model;
 	private JPanel devInfoBottom;
+
+	public JLabel diastolicLabel;
+	public JLabel systolicLabel;
 
 	/**
 	 * constructor
@@ -244,6 +249,13 @@ public class DrawingPanel extends JPanel
 		// databuff patient
 		dataBuffer = outBuffer;
 		patient = dataBuffer.getPatient();
+		if (patient.getDevInfo() != null) {
+			if (patient.getDevInfo().getDataType() == DataType.ECG_8CH) {
+				model = 1;
+			} else if (patient.getDevInfo().getDataType() == DataType.ECG_3CH) {
+				model = 2;
+			}
+		}
 
 		isDrawBackground = true;
 		informationColor = Style.InfoAreaBackgroundColor;
@@ -296,7 +308,15 @@ public class DrawingPanel extends JPanel
 		peakFlag = new boolean[maxTimeWindow * maxDataFrequency];
 
 		initChanelAndBuff();
-
+		boolean selectChanelFlag1[] = { true, true, true, true, true, true,
+				true, true, true, true, true, true };
+		boolean selectChannelFlag2[] = { true, true, true, true, true, true,
+				false, false, false, false, true, false };
+		if (model == 1) {
+			selectChannel(selectChanelFlag1, model);
+		} else {
+			selectChannel(selectChannelFlag2, model);
+		}
 		this.setBorder(new LineBorder(Style.DrawingPanelBorderColor, borderSize));
 		prepareCanvas(this.getWidth(), this.getHeight());
 
@@ -361,7 +381,129 @@ public class DrawingPanel extends JPanel
 
 		this.model = model;
 		endDraw();
-		while (!finishTTimesDrawECG);
+		while (!finishTTimesDrawECG)
+			;
+		int sumSelectLeads = 0;
+		ArrayList<float[]> selectDisplayBufferList = new ArrayList<float[]>();
+		selectChanelNameList = new ArrayList<String>();
+		for (int i = 0; i < selectChannelFlag.length; i++) {
+			if (selectChannelFlag[i]) {
+				sumSelectLeads++;
+				selectDisplayBufferList.add(displayBufferList.get(i));
+				selectChanelNameList.add(SystemConstant.ECGLEADNAMES.get(i));
+			}
+		}
+		yChannel = new int[sumSelectLeads];
+		for (int j = 0; j < yChannel.length; j++) {
+			yChannel[j] = 0;
+		}
+		this.selectDisplayBufferList = selectDisplayBufferList;
+		this.validSelectChanelNumb = sumSelectLeads;
+		this.selectChannelFlag = selectChannelFlag;
+
+		devInfoBottom.removeAll();
+		if (model == 1) {
+			for (int i = 0; i < leadLabels.size(); i++) {
+				leadLabels.get(i).setSize(new Dimension(20, 20));
+				leadLabels.get(i).setBackground(informationColor);
+				leadLabels.get(i).setForeground(Style.InfoAreaForegroundColor);
+				devInfoBottom.add(leadLabels.get(i));
+			}
+		} else {
+			for (int i = 0; i < leadLabels.size(); i++) {
+				if (i != 4 && i != 5 && i != 6 && i != 7 && i != 9) {
+					leadLabels.get(i).setSize(new Dimension(20, 20));
+					leadLabels.get(i).setBackground(informationColor);
+					leadLabels.get(i).setForeground(
+							Style.InfoAreaForegroundColor);
+					devInfoBottom.add(leadLabels.get(i));
+				}
+			}
+
+		}
+
+		restartDraw();
+	}
+
+	public void selectChannel2(boolean[] selectChannelFlag, int model) {
+
+		this.model = model;
+		endDraw();
+
+		eraseData();
+		DrawingPanel.this.freezeDraw();
+		buttonPause.setEnabled(false);
+		waitingTimeDialog2 = new WaitingTimeDialog(mainFrame);
+		waitingTimeDialog2.getTipLabel().setText("导联模式切换中,请等待");
+		recordNumb = -1;
+		waitTimer = new Timer(1000, new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				if (recordNumb >= 0) {
+					recordNumb--;
+					if (recordNumb == 0) {
+						waitTimer.stop();
+						waitingTimeDialog2.close();
+						waitingTimeDialog2 = null;
+						buttonPause.setEnabled(true);
+
+						resumeDraw();
+						buttonPause.setToolTipText("暂停");
+						buttonPause.setIcon(SystemResources.pauseIcon);
+						DrawingPanel.this.repaint();
+					} else {
+						System.out.println("else!!!!!!!!!!1");
+						String tip = "导联模式切换完成，缓存数据中 " + recordNumb + " s";
+						waitingTimeDialog2.getTipLabel().setText(tip);
+					}
+				}
+			}
+		});
+		waitTimer.start();
+
+		if (model == 1) {
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					dataBuffer.setDeviceDataType(DataType.ECG_8CH);
+					SwingUtilities.invokeLater(new Runnable() {
+
+						@Override
+						public void run() {
+							ptPerSecond = dataBuffer.getFrequency();
+							prepareCanvas(DrawingPanel.this.getWidth(),
+									DrawingPanel.this.getHeight());
+							DrawingPanel.this.repaint();
+						}
+					});
+					recordNumb = 10;
+				}
+			}).start();
+		} else {
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					dataBuffer.setDeviceDataType(DataType.ECG_3CH);
+					SwingUtilities.invokeLater(new Runnable() {
+
+						@Override
+						public void run() {
+							ptPerSecond = dataBuffer.getFrequency();
+							prepareCanvas(DrawingPanel.this.getWidth(),
+									DrawingPanel.this.getHeight());
+							DrawingPanel.this.repaint();
+						}
+					});
+					recordNumb = 10;
+				}
+			}).start();
+		}
+
+		while (!finishTTimesDrawECG)
+			;
 		int sumSelectLeads = 0;
 		ArrayList<float[]> selectDisplayBufferList = new ArrayList<float[]>();
 		selectChanelNameList = new ArrayList<String>();
@@ -492,7 +634,7 @@ public class DrawingPanel extends JPanel
 	 * initialize all UI components
 	 */
 	// @SuppressWarnings("deprecation")
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void initializeComponents() {
 		setLayout(null);
 		settingButton = new JButton("显示设置");
@@ -635,6 +777,8 @@ public class DrawingPanel extends JPanel
 		// 选择导联
 		{
 			leadSelectButton = new JButton("导联选择");
+			leadSelectButton.setCursor(Cursor
+					.getPredefinedCursor(Cursor.HAND_CURSOR));
 			leadSelectButton.setBackground(Color.CYAN);
 			leadSelectButton.addActionListener(this);
 			JPanel panel = new JPanel(new GridLayout(1, 1));
@@ -696,11 +840,11 @@ public class DrawingPanel extends JPanel
 						JLabel label = new JLabel("bpm");
 						label.setForeground(Color.GREEN);
 						panel2.add(label);
-						panel.add(panel2, BorderLayout.NORTH);
+						panel.add(label, BorderLayout.EAST);
 					}
 					labelBeat = new JLabel("80", JLabel.CENTER);
 					labelBeat.setForeground(Color.GREEN);
-					labelBeat.setFont(new Font("Arial Black", Font.BOLD, 30));
+					labelBeat.setFont(new Font("Arial Black", Font.BOLD, 20));
 					panel.add(labelBeat, BorderLayout.CENTER);
 				}
 				// 血氧
@@ -720,11 +864,11 @@ public class DrawingPanel extends JPanel
 						JLabel label = new JLabel("%");
 						label.setForeground(Color.RED);
 						panel2.add(label);
-						panel.add(panel2, BorderLayout.NORTH);
+						panel.add(label, BorderLayout.EAST);
 					}
 					oxygenLabel = new JLabel("未连接", JLabel.CENTER);
 					oxygenLabel.setForeground(Color.RED);
-					oxygenLabel.setFont(new Font("楷体", Font.BOLD, 25));
+					oxygenLabel.setFont(new Font("楷体", Font.BOLD, 20));
 					panel.add(oxygenLabel, BorderLayout.CENTER);
 				}
 			}
@@ -734,7 +878,7 @@ public class DrawingPanel extends JPanel
 				physiologicalSignalPanel.add(hspPanel);
 				// 无创血压
 				{
-					JPanel panel = new JPanel(new BorderLayout());
+					final JPanel panel = new JPanel(new BorderLayout());
 					panel.setEnabled(false);
 					panel.setBackground(Color.BLACK);
 					hspPanel.add(panel);
@@ -749,12 +893,13 @@ public class DrawingPanel extends JPanel
 						JLabel label = new JLabel("mmHg");
 						label.setForeground(Color.YELLOW);
 						panel2.add(label);
-						panel.add(panel2, BorderLayout.NORTH);
+						panel.add(label, BorderLayout.EAST);
 					}
 					pressureLabel = new JLabel("未连接", JLabel.CENTER);
 					pressureLabel.setForeground(Color.YELLOW);
-					pressureLabel.setFont(new Font("楷体", Font.BOLD, 25));
+					pressureLabel.setFont(new Font("楷体", Font.BOLD, 20));
 					panel.add(pressureLabel, BorderLayout.CENTER);
+
 				}
 				// 体温
 				{
@@ -773,11 +918,11 @@ public class DrawingPanel extends JPanel
 						JLabel label = new JLabel("°C");
 						label.setForeground(Color.WHITE);
 						panel2.add(label);
-						panel.add(panel2, BorderLayout.NORTH);
+						panel.add(label, BorderLayout.EAST);
 					}
 					tempLabel = new JLabel("未连接", JLabel.CENTER);
 					tempLabel.setForeground(Color.WHITE);
-					tempLabel.setFont(new Font("楷体", Font.BOLD, 25));
+					tempLabel.setFont(new Font("楷体", Font.BOLD, 20));
 					panel.add(tempLabel, BorderLayout.CENTER);
 				}
 			}
@@ -796,7 +941,7 @@ public class DrawingPanel extends JPanel
 			analysisPanelBorder.setTitleColor(Style.InfoAreaForegroundColor);
 			analysisPanelBorder.setTitleFont(Style.InfoSubTitleFont);
 			analysisPanel.setBorder(analysisPanelBorder);
-			analysisPanel.setPreferredSize(Style.InfoSubSectionDimension);
+			analysisPanel.setPreferredSize(Style.InfoSubSectionDimension2);
 
 			{
 				labelWarningMessage = addAlarmLabel("网络存在问题");
@@ -2095,11 +2240,12 @@ public class DrawingPanel extends JPanel
 		} else if (e.getSource() == leadSelectButton) {
 			ChoseLeadDialog choseLeadDialog = new ChoseLeadDialog(mainFrame,
 					DrawingPanel.this, patient);
-			boolean selectChannelFlag2[] = {true, true, true, true, true, true,
-					true, true, true, true, true, true};
+			boolean selectChannelFlag2[] = { true, true, true, true, true,
+					true, true, true, true, true, true, true };
 			choseLeadDialog.setSelectChannelFlag(selectChannelFlag2);
 		}
 	}
+
 	/*
 	 * JFileChooser class and renew approveSelection funtion
 	 */
@@ -2356,6 +2502,7 @@ public class DrawingPanel extends JPanel
 	private int recordNumb;
 	private Timer waitTimer;
 	private WaitingTimeDialog waitingTimeDialog;
+	private WaitingTimeDialog waitingTimeDialog2;
 
 	// / ************* setters and getters **************
 	/**
